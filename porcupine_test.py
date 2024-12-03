@@ -25,7 +25,7 @@ stream = p.open(format=FORMAT,
                 channels=CHANNELS,
                 rate=ORIGIN_RATE,
                 input=True,
-                input_device_index=12,
+                input_device_index=14,
                 )
 
 print('Recording...')
@@ -37,7 +37,7 @@ try:
 
     channel_one_data = audio_data[:,0]
     num_samples = int(len(channel_one_data) * SAMPLED_RATE / ORIGIN_RATE)
-    audio_frame = resample(channel_one_data, num_samples)
+    audio_frame = resample(channel_one_data, num_samples).astype(np.int16)
     keyword_index = porcupine.process(audio_frame)
     if keyword_index in range(len(keyword_list)):
       print(f"{keyword_list[keyword_index]} detected")
@@ -45,16 +45,5 @@ except KeyboardInterrupt:
   print("recording stop...")
 stream.close()
 p.terminate()
-# def get_next_audio_frame():
-#   pass
-#
-#
-# while True:
-#   audio_frame = get_next_audio_frame()
-#   keyword_index = porcupine.process(audio_frame)
-#   if keyword_index == 0:
-#       # detected `porcupine`
-#   elif keyword_index == 1:
-#       # detected `bumblebee`
 
 porcupine.delete()
