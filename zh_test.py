@@ -2,12 +2,23 @@
 from scipy.signal import resample
 import numpy as np
 import pyaudio
-
+import wave
 import pvporcupine
-keyword_list = ['hey siri','alexa','ok google']
+
+wf = wave.open('./response_word/response.wav','rb')
+
+write_p = pyaudio.PyAudio()
+write_stream = write_p.open(format = pyaudio.paInt16,
+                            channels= wf.getnchannels(),
+                            rate=wf.getframerate(),
+                            output=True
+)
+response_audio = wf.readframes(wf.getnframes())
+
 porcupine = pvporcupine.create(
-  access_key='your_key',
-  keywords=keyword_list
+  access_key='your key',
+  keyword_paths=['./keyword/小勤_zh_windows_v3_0_0.ppn'],
+  model_path='./model/porcupine_params_zh.pv'
 )
 
 FORMAT = pyaudio.paInt16
@@ -39,12 +50,16 @@ try:
     num_samples = int(len(channel_one_data) * SAMPLED_RATE / ORIGIN_RATE)
     audio_frame = resample(channel_one_data, num_samples).astype(np.int16)
     keyword_index = porcupine.process(audio_frame)
-    if keyword_index in range(len(keyword_list)):
-      print(f"{keyword_list[keyword_index]} detected")
+    if keyword_index == 0:
+        print("小勤 detected")
+        write_stream.write(response_audio)
+
 except KeyboardInterrupt:
   print("recording stop...")
 finally:
     stream.close()
     p.terminate()
-
+    write_stream.close()
+    write_p.terminate()
+    wf.close()
     porcupine.delete()
